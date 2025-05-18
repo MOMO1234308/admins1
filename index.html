@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام CFW</title>
+    <style>
+        /* Reset CSS */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            overflow: hidden;
+            height: 100vh;
+            background-color: #000;
+            color: white;
+        }
+        
+        /* شاشة التحميل */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .letter-M {
+            color: #fff;
+            font-size: 120px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            animation: pulse 2s infinite, float 3s ease-in-out infinite;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
+        }
+        
+        .loading-bar-container {
+            width: 300px;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        .progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #fff, #aaa);
+            border-radius: 10px;
+            animation: load 5s linear forwards, rainbow 5s linear infinite;
+        }
+        
+        /* صفحة القمر */
+        .moon-page {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden;
+            z-index: 900;
+        }
+        
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(white 1px, transparent 1px),
+                radial-gradient(white 1px, transparent 1px);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+        }
+        
+        .moon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 150px;
+            height: 150px;
+            background: #f5f5f5;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 
+                0 0 60px 30px rgba(245, 245, 245, 0.3),
+                0 0 100px 60px rgba(245, 245, 245, 0.2),
+                0 0 140px 90px rgba(245, 245, 245, 0.1);
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+        
+        /* نظام إدخال الكود */
+        .code-system {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #0066ff;
+            text-align: center;
+            width: 90%;
+            max-width: 350px;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(0, 102, 255, 0.5);
+        }
+        
+        /* واجهة الإدارة */
+        .admin-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow-x: auto;
+            padding: 20px;
+            background-color: #000;
+            z-index: 800;
+        }
+        
+        .admin-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #0066ff;
+        }
+        
+        .admin-table {
+            width: 100%;
+            min-width: 600px;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .admin-table th, .admin-table td {
+            border: 1px solid #0066ff;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .admin-table th {
+            background-color: rgba(0, 102, 255, 0.3);
+            font-size: 18px;
+        }
+        
+        .action-btns {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .add-btn, .delete-btn, .back-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .add-btn {
+            background: linear-gradient(45deg, #00aa00, #00ff00);
+            color: white;
+        }
+        
+        .delete-btn {
+            background: linear-gradient(45deg, #ff0000, #ff5555);
+            color: white;
+        }
+        
+        .back-btn {
+            background: linear-gradient(45deg, #0066ff, #00ccff);
+            color: white;
+        }
+        
+        /* نموذج الإضافة */
+        .add-form {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.95);
+            border: 2px solid #00cc00;
+            border-radius: 15px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            z-index: 1001;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #00cc00;
+            color: white;
+            border-radius: 5px;
+        }
+        
+        .form-btns {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .save-btn, .cancel-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .save-btn {
+            background-color: #00aa00;
+            color: white;
+        }
+        
+        .cancel-btn {
+            background-color: #ff0000;
+            color: white;
+        }
+        
+        /* للجوال */
+        @media (max-width: 768px) {
+            .letter-M {
+                font-size: 80px;
+            }
+            
+            .loading-bar-container {
+                width: 80%;
+            }
+            
+            .admin-table {
+                font-size: 14px;
+            }
+            
+            .admin-table th, .admin-table td {
+                padding: 8px;
+            }
+        }
+        
+        /* Animations */
+        @keyframes load {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        @keyframes glow {
+            from { box-shadow: 
+                0 0 60px 30px rgba(245, 245, 245, 0.3),
+                0 0 100px 60px rgba(245, 245, 245, 0.2),
+                0 0 140px 90px rgba(245, 245, 245, 0.1); }
+            to { box-shadow: 
+                0 0 80px 40px rgba(245, 245, 245, 0.4),
+                0 0 120px 80px rgba(245, 245, 245, 0.3),
+                0 0 160px 100px rgba(245, 245, 245, 0.2); }
+        }
+    </style>
+</head>
+<body>
+    <!-- شاشة التحميل -->
+    <div class="loading-screen">
+        <div class="letter-M">M</div>
+        <div class="loading-bar-container">
+            <div class="progress"></div>
+        </div>
+    </div>
+    
+    <!-- صفحة القمر -->
+    <div class="moon-page">
+        <div class="stars"></div>
+        <div class="moon"></div>
+        <div class="code-system">
+            <h2>نظام التحقق</h2>
+            <p>الرجاء إدخال كود الدخول</p>
+            <input type="password" class="code-input" placeholder="أدخل الكود هنا">
+            <button class="submit-btn">تأكيد</button>
+        </div>
+    </div>
+    
+    <!-- واجهة الإدارة -->
+    <div class="admin-panel">
+        <div class="admin-header">
+            <h2>سجل أسماء الإدارة</h2>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>الاسم</th>
+                        <th>الرتبة</th>
+                        <th>المنصب</th>
+                        <th>التاريخ</th>
+                        <th>تحديد</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-table-body">
+                    <!-- سيتم ملؤه بالبيانات المحفوظة -->
+                </tbody>
+            </table>
+        </div>
+        <div class="action-btns">
+            <button class="add-btn">إضافة عضو جديد</button>
+            <button class="delete-btn">حذف المحدد</button>
+            <button class="back-btn">العودة</button>
+        </div>
+    </div>
+    
+    <!-- نموذج إضافة عضو جديد -->
+    <div class="add-form">
+        <h3 style="text-align: center; margin-bottom: 20px;">إضافة عضو جديد</h3>
+        <div class="form-group">
+            <label for="member-name">اسم العضو:</label>
+            <input type="text" id="member-name" required>
+        </div>
+        <div class="form-group">
+            <label for="member-rank">الرتبة:</label>
+            <input type="text" id="member-rank" placeholder="اكتب الرتبة يدوياً">
+        </div>
+        <div class="form-group">
+            <label for="member-position">المنصب:</label>
+            <input type="text" id="member-position" placeholder="اكتب المنصب يدوياً">
+        </div>
+        <div class="form-btns">
+            <button class="save-btn">حفظ</button>
+            <button class="cancel-btn">إلغاء</button>
+        </div>
+    </div>
+
+    <script>
+        // بيانات الأعضاء المحفوظة
+        let members = JSON.parse(localStorage.getItem('cfw_members')) || [];
+        
+        // عناصر الواجهة
+        const loadingScreen = document.querySelector('.loading-screen');
+        const moonPage = document.querySelector('.moon-page');
+        const codeSystem = document.querySelector('.code-system');
+        const codeInput = document.querySelector('.code-input');
+        const submitBtn = document.querySelector('.submit-btn');
+        const adminPanel = document.querySelector('.admin-panel');
+        const tableBody = document.getElementById('admin-table-body');
+        const addBtn = document.querySelector('.add-btn');
+        const deleteBtn = document.querySelector('.delete-btn');
+        const backBtn = document.querySelector('.back-btn');
+        const addForm = document.querySelector('.add-form');
+        const saveBtn = document.querySelector('.save-btn');
+        const cancelBtn = document.querySelector('.cancel-btn');
+        
+        // تحميل البيانات عند البدء
+        function loadMembers() {
+            tableBody.innerHTML = '';
+            members.forEach((member, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${member.name}</td>
+                    <td>${member.rank}</td>
+                    <td>${member.position}</td>
+                    <td>${member.date}</td>
+                    <td><input type="checkbox" class="member-checkbox"></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // الانتقال بعد 5 ثواني
+        setTimeout(() => {
+            loadingScreen.style.display = 'none';
+            moonPage.style.display = 'block';
+            codeSystem.style.display = 'block';
+            
+            // إضافة نجوم متحركة
+            const starsContainer = document.querySelector('.stars');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.style.position = 'absolute';
+                star.style.width = Math.random() * 3 + 'px';
+                star.style.height = star.style.width;
+                star.style.backgroundColor = 'white';
+                star.style.borderRadius = '50%';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.opacity = Math.random();
+                star.style.animation = `twinkle ${Math.random() * 5 + 3}s infinite alternate`;
+                starsContainer.appendChild(star);
+            }
+            
+            // تحميل الأعضاء المحفوظة
+            loadMembers();
+        }, 5000);
+        
+        // التحقق من الكود
+        submitBtn.addEventListener('click', () => {
+            if(codeInput.value === 'mmm123') {
+                moonPage.style.display = 'none';
+                adminPanel.style.display = 'block';
+            } else {
+                alert('كود خاطئ! الرجاء المحاولة مرة أخرى');
+                codeInput.value = '';
+            }
+        });
+        
+        // فتح نموذج الإضافة
+        addBtn.addEventListener('click', () => {
+            addForm.style.display = 'block';
+        });
+        
+        // إغلاق النموذج
+        cancelBtn.addEventListener('click', () => {
+            addForm.style.display = 'none';
+            document.getElementById('member-name').value = '';
+            document.getElementById('member-rank').value = '';
+            document.getElementById('member-position').value = '';
+        });
+        
+        // حفظ العضو الجديد
+        saveBtn.addEventListener('click', () => {
+            const name = document.getElementById('member-name').value;
+            const rank = document.getElementById('member-rank').value;
+            const position = document.getElementById('member-position').value;
+            const date = new Date().toLocaleDateString('ar-EG');
+            
+            if(name && rank && position) {
+                members.push({
+                    name: name,
+                    rank: rank,
+                    position: position,
+                    date: date
+                });
+                
+                localStorage.setItem('cfw_members', JSON.stringify(members));
+                loadMembers();
+                addForm.style.display = 'none';
+                document.getElementById('member-name').value = '';
+                document.getElementById('member-rank').value = '';
+                document.getElementById('member-position').value = '';
+            } else {
+                alert('الرجاء إدخال جميع البيانات');
+            }
+        });
+        
+        // حذف أعضاء
+        deleteBtn.addEventListener('click', () => {
+            const checkboxes = document.querySelectorAll('.member-checkbox:checked');
+            if(checkboxes.length > 0) {
+                if(confirm(`هل تريد حذف ${checkboxes.length} عضو؟`)) {
+                    checkboxes.forEach(checkbox => {
+                        const rowIndex = checkbox.closest('tr').rowIndex - 1;
+                        members.splice(rowIndex, 1);
+                    });
+                    localStorage.setItem('cfw_members', JSON.stringify(members));
+                    loadMembers();
+                }
+            } else {
+                alert('الرجاء تحديد أعضاء للحذف');
+            }
+        });
+        
+        // العودة لصفحة القمر
+        backBtn.addEventListener('click', () => {
+            adminPanel.style.display = 'none';
+            moonPage.style.display = 'block';
+            codeSystem.style.display = 'block';
+        });
+    </script>
+</body>
+</html>
